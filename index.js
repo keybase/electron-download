@@ -23,7 +23,8 @@ module.exports = function download (opts, cb) {
   url += '/'
   url += process.env.ELECTRON_CUSTOM_FILENAME || opts.customFilename || filename
   var homeDir = homePath()
-  var cache = opts.cache || path.join(homeDir, './.electron')
+  var cache = process.env.NPM_CONFIG_ELECTRON_CACHE || process.env.ELECTRON_CACHE || opts.cache || path.join(homeDir, './.electron')
+  var onlyCache = !!process.env.NPM_CONFIG_ELECTRON_ONLY_CACHE || !!process.env.ELECTRON_ONLY_CACHE || opts.onlyCache
 
   var strictSSL = true
   if (opts.strictSSL === false || npmrc['strict-ssl'] === false) {
@@ -42,6 +43,8 @@ module.exports = function download (opts, cb) {
     if (exists) {
       debug('zip exists', cachedZip)
       return cb(null, cachedZip)
+    } else if (onlyCache) {
+      return cb(new Error('Failed to find Electron ' + filename + ' in cache ' + cache + ' (cache forced)'))
     }
 
     debug('creating cache/tmp dirs')
